@@ -8,6 +8,7 @@ object VitaOrganizerSettings {
 	val CHARSET = Charsets.UTF_8
 	var vpkFolder: String by PropDelegate(".")
 	var lastDeviceIp: String by PropDelegate("192.168.1.100")
+	var renamerString: String by PropDelegate("%TITLE% [%ID%][%REG%][%VT%].C%COMP%.vpk")
 
 	private var initialized = false
 	private val properties = Properties()

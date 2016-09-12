@@ -7,6 +7,7 @@ import com.soywiz.vitaorganizer.ext.getResourceString
 import com.soywiz.vitaorganizer.ext.getResourceURL
 import com.soywiz.vitaorganizer.ext.showDialog
 import com.soywiz.vitaorganizer.popups.KeyValueViewerFrame
+import com.soywiz.vitaorganizer.popups.RenamerFrame
 import com.soywiz.vitaorganizer.tasks.*
 import java.awt.*
 import java.awt.event.*
@@ -147,6 +148,13 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				})
 				add(JMenuItem(Texts.format("MENU_REPACK")).action {
 					if (entry != null) remoteTasks.queue(RepackVpkTask(entry!!, setSecure = true))
+				})
+				add(JMenuItem("Renamer").action {
+					if (entry != null) {
+						val renamer = RenamerFrame(this@VitaOrganizer, entry!!, "Rename: " + entry!!.title)
+						renamer.setLocationRelativeTo(this)
+						renamer.setVisible(true)
+					}
 				})
 
 				add(JSeparator())

@@ -2,10 +2,7 @@ package com.soywiz.vitaorganizer.ext
 
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import javax.swing.JButton
-import javax.swing.JDialog
-import javax.swing.JFrame
-import javax.swing.JMenuItem
+import javax.swing.*
 
 fun JFrame.showDialog(modal: JFrame) {
 
@@ -33,5 +30,10 @@ fun JButton.action(callback: () -> Unit): JButton {
 			callback()
 		}
 	})
+	return this
+}
+
+fun JTextField.action(callback: () -> Unit): JTextField {
+	addActionListener { callback() }
 	return this
 }
