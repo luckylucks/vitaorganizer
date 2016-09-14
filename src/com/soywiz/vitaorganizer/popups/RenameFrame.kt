@@ -1,8 +1,6 @@
 package com.soywiz.vitaorganizer.popups
 
-import com.soywiz.vitaorganizer.GameEntry
-import com.soywiz.vitaorganizer.VitaOrganizer
-import com.soywiz.vitaorganizer.VitaOrganizerSettings
+import com.soywiz.vitaorganizer.*
 import com.soywiz.vitaorganizer.ext.action
 import java.awt.event.KeyEvent
 import java.awt.Container
@@ -79,6 +77,7 @@ enum class RenamerStrings(val short: String, val description: String, val value:
     LANGUAGE("%REG%", "Region", {entry: GameEntry -> entry.region().short}),
     DUMPER("%VT%", "Dumper", {entry: GameEntry -> entry.dumperVersionShort}),
     COMPRESSION("%COMP%", "Compression", {entry: GameEntry -> entry.compressionLevel}),
+    VERSION("%VER%", "Version", {entry: GameEntry -> (entry.psf["APP_VER"] ?: entry.psf["VERSION"] ?: Texts.format("UNKNOWN_VERSION")).toString() }),
 }
 
 internal object SpringUtilities {
