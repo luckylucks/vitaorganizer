@@ -42,11 +42,11 @@ class UpdateFileListTask : VitaTask() {
 					}
 
 					println("For file ${vpkFile} Compressionslevel : ${compressionLevel} Dumperversion : ${dumper}")
-					if (!entry.compressionFile.exists()) {
-						entry.compressionFile.writeText(compressionLevel.toString())
+					if (!entry.compressionFile.isNotEmpty()) {
+						entry.compressionFile = compressionLevel.toString()
 					}
-					if (!entry.dumperVersionFile.exists()) {
-						entry.dumperVersionFile.writeText(dumper.shortName)
+					if (!entry.dumperVersionFile.isNotEmpty()) {
+						entry.dumperVersionFile = dumper.shortName.toString()
 					}
 
 					if (!entry.icon0File.exists()) {
@@ -55,15 +55,15 @@ class UpdateFileListTask : VitaTask() {
 					if (!entry.paramSfoFile.exists()) {
 						entry.paramSfoFile.writeBytes(paramSfoData)
 					}
-					if (!entry.sizeFile.exists()) {
+					if (!entry.sizeFile.isNotEmpty()) {
 						val uncompressedSize = ZipFile(vpkFile).entries().toList().map { it.size }.sum()
-						entry.sizeFile.writeText("" + uncompressedSize)
+						entry.sizeFile = uncompressedSize.toString()
 					}
-					if (!entry.permissionsFile.exists()) {
+					if (!entry.permissionsFile.isNotEmpty()) {
 						val ebootBinData = zip.getBytes("eboot.bin")
-						entry.permissionsFile.writeText("" + EbootBin.hasExtendedPermissions(ebootBinData.open2("r")))
+						entry.permissionsFile = EbootBin.hasExtendedPermissions(ebootBinData.open2("r")).toString()
 					}
-					entry.pathFile.writeBytes(vpkFile.absolutePath.toByteArray(Charsets.UTF_8))
+					entry.pathFile = vpkFile.absolutePath
 					synchronized(VitaOrganizer.VPK_GAME_IDS) {
 						VitaOrganizer.VPK_GAME_IDS += gameId
 					}

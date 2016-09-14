@@ -15,23 +15,23 @@ class GameEntry(val gameId: String) {
 	}
 	val hasExtendedPermissions by lazy {
 		try {
-			entry.permissionsFile.readText().toBoolean()
+			entry.permissionsFile.toBoolean()
 		} catch (e: Throwable) {
 			true
 		}
 	}
 	val id by lazy { psf["TITLE_ID"].toString() }
 	val title by lazy { psf["TITLE"].toString() }
-	val dumperVersion by lazy { DumperNamesHelper().findDumperByShortName( entry.dumperVersionFile.readText() ).longName }
-	val dumperVersionShort by lazy { DumperNamesHelper().findDumperByShortName( entry.dumperVersionFile.readText() ).shortName }
-	val compressionLevel by lazy { entry.compressionFile.readText() }
+	val dumperVersion by lazy { DumperNamesHelper().findDumperByShortName( entry.dumperVersionFile ).longName }
+	val dumperVersionShort by lazy { DumperNamesHelper().findDumperByShortName( entry.dumperVersionFile ).shortName }
+	val compressionLevel by lazy { entry.compressionFile }
 	var inVita = false
 	var inPC = false
-	val vpkLocalPath: String? get() = entry.pathFile.readText(Charsets.UTF_8)
+	val vpkLocalPath: String? get() = entry.pathFile
 	val vpkLocalFile: File? get() = if (vpkLocalPath != null) File(vpkLocalPath!!) else null
 	val size: Long by lazy {
 		try {
-			entry.sizeFile.readText().toLong()
+			entry.sizeFile.toLong()
 		} catch (e: Throwable) {
 			0L
 		}
