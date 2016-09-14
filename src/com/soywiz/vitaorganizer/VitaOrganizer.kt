@@ -345,17 +345,17 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 									PsvitaDevice.getParamSfoCached(gameId)
 									PsvitaDevice.getGameIconCached(gameId)
 									val entry2 = VitaOrganizerCache.entry(gameId)
-									val sizeFile = entry2.sizeFile
-									if (!sizeFile.exists()) {
-										sizeFile.writeText("" + PsvitaDevice.getGameSize(gameId))
+									//val sizeFile = entry2.sizeFile
+									if (!entry2.sizeFile.isEmpty()) {
+										entry2.sizeFile = "" + PsvitaDevice.getGameSize(gameId)
 									}
 
-									if (!entry2.permissionsFile.exists()) {
+									if (!entry2.permissionsFile.isEmpty()) {
 										val ebootBin = PsvitaDevice.downloadEbootBin(gameId)
 										try {
-											entry2.permissionsFile.writeText("" + EbootBin.hasExtendedPermissions(ebootBin.open2("r")))
+											entry2.permissionsFile = "" + EbootBin.hasExtendedPermissions(ebootBin.open2("r"))
 										} catch (e: Throwable) {
-											entry2.permissionsFile.writeText("true")
+											entry2.permissionsFile = "true"
 										}
 									}
 
