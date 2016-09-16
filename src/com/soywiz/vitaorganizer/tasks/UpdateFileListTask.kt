@@ -2,11 +2,11 @@ package com.soywiz.vitaorganizer.tasks
 
 import com.soywiz.util.open2
 import com.soywiz.vitaorganizer.*
-import com.soywiz.util.DumperNamesHelper
 import com.soywiz.util.DumperModules
 import com.soywiz.util.DumperNames
 import com.soywiz.vitaorganizer.ext.getBytes
 import java.io.File
+import java.util.regex.Pattern
 import java.util.zip.ZipFile
 
 class UpdateFileListTask : VitaTask() {
@@ -28,24 +28,23 @@ class UpdateFileListTask : VitaTask() {
 
 					val entry = VitaOrganizerCache.entry(gameId)
 
-					//try to find compressionlevel and vitaminversion or maiversion
-					val paramsfo = zip.getEntry("sce_sys/param.sfo")
-					val compressionLevel = if (paramsfo != null) paramsfo.method.toString() else ""
-
+					//try to find vitaminversion or maiversion
 					var dumper = DumperNames.UNKNOWN
 					for ( file in DumperModules.values() ) {
 						val suprx = zip.getEntry(file.file)
 						if (suprx != null) {
-							dumper = DumperNamesHelper().findDumperBySize(suprx.size)
+							dumper = DumperNames.findDumperBySize(suprx.size)
 						}
 					}
+					val matcher = Regex("[cC]\\d").find(vpkFile.name)		//find one! string from C0 till C9, can be ambiguous ex. part of name or id
+					val compressionlevel = matcher?.value ?: "unknown"
 
-					println("For file ${vpkFile} Compressionslevel : ${compressionLevel} Dumperversion : ${dumper}")
-					if (!entry.compressionFile.isNotEmpty()) {
-						entry.compressionFile = compressionLevel.toString()
+					println("For file ${vpkFile} Dumperversion : ${dumper} Compressionlevel : ${compressionlevel}")
+					if (entry.dumperVersion.isEmpty()) {
+						entry.dumperVersion = dumper.shortName.toString()
 					}
-					if (!entry.dumperVersionFile.isNotEmpty()) {
-						entry.dumperVersionFile = dumper.shortName.toString()
+					if (entry.compression.isEmpty()) {
+						entry.compression = compressionlevel
 					}
 
 					if (!entry.icon0File.exists()) {
@@ -54,15 +53,18 @@ class UpdateFileListTask : VitaTask() {
 					if (!entry.paramSfoFile.exists()) {
 						entry.paramSfoFile.writeBytes(paramSfoData)
 					}
-					if (!entry.sizeFile.isNotEmpty()) {
+					if (entry.size <= 0L) {
 						val uncompressedSize = ZipFile(vpkFile).entries().toList().map { it.size }.sum()
-						entry.sizeFile = uncompressedSize.toString()
+						entry.size = uncompressedSize
 					}
-					if (!entry.permissionsFile.isNotEmpty()) {
+					if (entry.permissionsString.isEmpty()) {
 						val ebootBinData = zip.getBytes("eboot.bin")
-						entry.permissionsFile = EbootBin.hasExtendedPermissions(ebootBinData.open2("r")).toString()
+						entry.permissions = EbootBin.hasExtendedPermissions(ebootBinData.open2("r"))
 					}
-					entry.pathFile = vpkFile.absolutePath
+					if (entry.pathFile.isEmpty() || !entry.pathFile.equals(vpkFile.absolutePath)) {
+						entry.pathFile = vpkFile.absolutePath
+					}
+
 					synchronized(VitaOrganizer.VPK_GAME_IDS) {
 						VitaOrganizer.VPK_GAME_IDS += gameId
 					}

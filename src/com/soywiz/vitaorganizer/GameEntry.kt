@@ -1,7 +1,7 @@
 package com.soywiz.vitaorganizer
 
+import com.soywiz.util.DumperNames
 import com.soywiz.util.stream
-import com.soywiz.util.DumperNamesHelper
 import java.io.File
 
 class GameEntry(val gameId: String) {
@@ -13,29 +13,17 @@ class GameEntry(val gameId: String) {
 			mapOf<String, Any>()
 		}
 	}
-	val hasExtendedPermissions by lazy {
-		try {
-			entry.permissionsFile.toBoolean()
-		} catch (e: Throwable) {
-			true
-		}
-	}
+	val hasExtendedPermissions by lazy { entry.permissions }
 	val id by lazy { psf["TITLE_ID"].toString() }
 	val title by lazy { psf["TITLE"].toString() }
-	val dumperVersion by lazy { DumperNamesHelper().findDumperByShortName( entry.dumperVersionFile ).longName }
-	val dumperVersionShort by lazy { DumperNamesHelper().findDumperByShortName( entry.dumperVersionFile ).shortName }
-	val compressionLevel by lazy { entry.compressionFile }
+	val dumperVersion by lazy { DumperNames.findDumperByShortName( entry.dumperVersion).longName }
+	val dumperVersionShort by lazy { DumperNames.findDumperByShortName( entry.dumperVersion).shortName }
+	val compressionLevel by lazy { entry.compression }
 	var inVita = false
 	var inPC = false
 	val vpkLocalPath: String? get() = entry.pathFile
 	val vpkLocalFile: File? get() = if (vpkLocalPath != null) File(vpkLocalPath!!) else null
-	val size: Long by lazy {
-		try {
-			entry.sizeFile.toLong()
-		} catch (e: Throwable) {
-			0L
-		}
-	}
+	val size: Long by lazy { entry.size }
 
 	fun region() : Region {
 		if (id.contains("PCSB") || id.contains("PCSB"))

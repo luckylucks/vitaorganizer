@@ -13,13 +13,32 @@ abstract class AbstractSettings(var file: File) {
 
     inner class PropDelegate(val default: String) {
         operator fun getValue(thisRef: Any?, property: KProperty<*>): String {
-            return this@AbstractSettings.obj.ensureProperties().getProperty(property.name, default)
+            return this@AbstractSettings.obj.readProperty(property.name, default)
         }
 
         operator fun setValue(thisRef: Any?, property: KProperty<*>, value: String) {
-            this@AbstractSettings.obj.ensureProperties().setProperty(property.name, value)
-            this@AbstractSettings.obj.writeProperties()
+            this@AbstractSettings.obj.writeProperty(property.name, value)
         }
+    }
+
+    inner class PropDelegateLong(val default: Long) {
+        operator fun getValue(thisRef: Any?, property: KProperty<*>): Long {
+            return this@AbstractSettings.obj.readProperty(property.name, default.toString()).toLong()
+        }
+
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Long) {
+            this@AbstractSettings.obj.writeProperty(property.name, value.toString())
+        }
+    }
+
+    fun readProperty(name: String, default: String) : String{
+        return ensureProperties().getProperty(name, default)
+    }
+
+    fun writeProperty(name: String, value: String) {
+        ensureProperties().setProperty(name, value)
+        obj.writeProperties()
+        //println("Write into Property Name: ${name} Value: ${value}")
     }
 
     protected fun ensureProperties(): Properties {
