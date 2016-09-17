@@ -10,29 +10,30 @@ import java.io.File
 import java.util.*
 import javax.swing.*
 
-class RenamerFrame(val vita: VitaOrganizer, val entry: GameEntry, title: String) : JFrame(title) {
+class RenamerFrame(val vita: VitaOrganizer, val entry: GameEntry) : JFrame() {
 
     val renamer = JTextField(VitaOrganizerSettings.renamerString).action { updateRenamedString() }
     val output = JTextField("Test")
 
     init {
         setDefaultCloseOperation( JFrame.DISPOSE_ON_CLOSE )
+        setTitle(Texts.format("RENAMER_FRAMETITLE", "game" to entry.title))
         val panel = JPanel(SpringLayout()).apply {
-            add(JLabel("Original Filename:", JLabel.TRAILING))
+            add(JLabel(Texts.format("RENAMER_ORIGINALNAME"), JLabel.TRAILING))
             add(JLabel(entry.vpkLocalFile?.name))
-            add(JLabel("Parameter:", JLabel.TRAILING))
+            add(JLabel(Texts.format("RENAMER_PARAMETER"), JLabel.TRAILING))
 
             val builder = StringJoiner(", ")
             for (r in RenamerStrings.values()) {
                 builder.add( r.short + " - " + r.description )
             }
             add(JLabel( builder.toString() ))
-            add(JLabel("Renamerstring:", JLabel.TRAILING))
+            add(JLabel(Texts.format("RENAMER_RENAMERSTRING"), JLabel.TRAILING))
             add(renamer)
-            add(JLabel("New Name:", JLabel.TRAILING))
+            add(JLabel(Texts.format("RENAMER_NEWNAME"), JLabel.TRAILING))
             add(output)
-            add(JButton("Cancel").action { this@RenamerFrame.dispose()} )
-            add(JButton("Rename").action { renameFile() } )
+            add(JButton(Texts.format("RENAMER_BUTTON_CANCEL")).action { this@RenamerFrame.dispose()} )
+            add(JButton(Texts.format("RENAMER_BUTTON_RENAME")).action { renameFile() } )
 
         }
         panel.setSize(640, 480)
@@ -53,7 +54,7 @@ class RenamerFrame(val vita: VitaOrganizer, val entry: GameEntry, title: String)
     fun updateRenamedString() {
         var text = renamer.text
         for( r in RenamerStrings.values() ) {
-            text = text.replace( r.short, r.value(entry) )
+            text = text.replace(r.short, r.value(entry))
         }
         output.setText(text)
         println("Formated Text ${text}")
@@ -66,20 +67,59 @@ class RenamerFrame(val vita: VitaOrganizer, val entry: GameEntry, title: String)
         println("Rename from ${file?.name} to ${newname}" )
         file?.renameTo( File(newname) )
         VitaOrganizerSettings.renamerString = renamer.text
+        VitaOrganizerCache.entry( entry.gameId ).delete()
         vita.updateFileList()
         this.dispose()
     }
 }
 
-enum class RenamerStrings(val short: String, val description: String, val value: (entry: GameEntry)->String) { //, val value: Any
-    TITLE("%TITLE%", "Title", {entry: GameEntry -> entry.title}),
-    ID("%ID%", "ID", {entry: GameEntry -> entry.gameId}),
-    LANGUAGE("%REG%", "Region", {entry: GameEntry -> entry.region().short}),
-    DUMPER("%VT%", "Dumper", {entry: GameEntry -> entry.dumperVersionShort}),
-    COMPRESSION("%COMP%", "Compression", {entry: GameEntry -> entry.compressionLevel}),
-    VERSION("%VER%", "Version", {entry: GameEntry -> (entry.psf["APP_VER"] ?: entry.psf["VERSION"] ?: Texts.format("UNKNOWN_VERSION")).toString() }),
+enum class RenamerStrings(val short: String, val description: String, val value: (entry: GameEntry)->String) {
+    TITLE("%TITLE%", Texts.format("RENAMERSTRINGS_TITLE"), {entry: GameEntry -> entry.title}),
+    ID("%ID%", Texts.format("RENAMERSTRINGS_ID"), {entry: GameEntry -> entry.gameId}),
+    LANGUAGE("%REG%", Texts.format("RENAMERSTRINGS_REGION"), {entry: GameEntry -> entry.region().short}),
+    DUMPER("%VT%", Texts.format("RENAMERSTRINGS_DUMPER"), {entry: GameEntry -> entry.dumperVersionShort}),
+    COMPRESSION("%COMP%", Texts.format("RENAMERSTRINGS_COMPRESSION"), {entry: GameEntry -> entry.compressionLevel}),
+    VERSION("%VER%", Texts.format("RENAMERSTRINGS_VERSION"), {entry: GameEntry -> (entry.psf["APP_VER"] ?: entry.psf["VERSION"] ?: Texts.format("UNKNOWN_VERSION")).toString() }),
 }
 
+/*
+ * Copyright (c) 1995, 2008, Oracle and/or its affiliates. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *   - Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *
+ *   - Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *
+ *   - Neither the name of Oracle or the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+ * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * A 1.4 file that provides utility methods for
+ * creating form- or grid-style layouts with SpringLayout.
+ * These utilities are used by several programs, such as
+ * SpringBox and SpringCompactGrid.
+ *
+ * automatic transformed to kotlin
+ */
 internal object SpringUtilities {
     /**
      * A debugging utility that prints to stdout the component's minimum,

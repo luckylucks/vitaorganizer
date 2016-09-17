@@ -2,6 +2,7 @@ package com.soywiz.vitaorganizer
 
 import com.soywiz.util.get
 import java.io.File
+import java.io.IOException
 
 object VitaOrganizerCache {
     val directory = "vitaorganizer/cache"
@@ -23,12 +24,12 @@ object VitaOrganizerCache {
                 try {
                     return sizeString.toLong()
                 } catch (e: Throwable) {
-                    return 0L
+                    return 0L       //String is probably empty -> not initialized
                 }
             }
             set(value) { sizeString = value.toString() }
-        var permissions: Boolean
-            get() {
+        var permissions: Boolean    //there should be a third value -> non initialized; now permissionsString.isEmpty is used
+            get() {                 //not sure if not initialized is an acceptable state
                 try {
                     return permissionsString.toBoolean()
                 } catch (e: Throwable) {
@@ -46,10 +47,19 @@ object VitaOrganizerCache {
         var sizeString: String by PropDelegate("")
         var permissionsString: String by PropDelegate("")
 
-        fun delete() {
-            icon0File.delete()
-            paramSfoFile.delete()
-            cacheFolder["$gameId.settings"].delete()
+        fun delete() {  //Normally if one delete fails, all should fail -> game is already deleted
+            deleteFile(icon0File)
+            deleteFile(paramSfoFile)
+            deleteFile(cacheFolder["$gameId.settings"])
+        }
+
+        fun deleteFile(file: File) {
+            try {
+                if (file.exists()) file.delete()
+            } catch (io: IOException) {
+                System.err.println("Error deleting ${file.name}")
+                io.printStackTrace()
+            }
         }
     }
 

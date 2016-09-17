@@ -33,7 +33,7 @@ class UpdateFileListTask : VitaTask() {
 					for ( file in DumperModules.values() ) {
 						val suprx = zip.getEntry(file.file)
 						if (suprx != null) {
-							dumper = DumperNames.findDumperBySize(suprx.size)
+							dumper = DumperNames.findDumperBySize(suprx.size, file)
 						}
 					}
 					val matcher = Regex("[cC]\\d").find(vpkFile.name)		//find one! string from C0 till C9, can be ambiguous ex. part of name or id

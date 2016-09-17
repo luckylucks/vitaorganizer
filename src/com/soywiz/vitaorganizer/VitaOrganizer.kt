@@ -1,5 +1,6 @@
 package com.soywiz.vitaorganizer
 
+import com.soywiz.util.DumperModules
 import com.soywiz.util.OS
 import com.soywiz.util.open2
 import com.soywiz.vitaorganizer.ext.action
@@ -149,9 +150,9 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				add(JMenuItem(Texts.format("MENU_REPACK")).action {
 					if (entry != null) remoteTasks.queue(RepackVpkTask(entry!!, setSecure = true))
 				})
-				add(JMenuItem("Renamer").action {
+				add(JMenuItem(Texts.format("MENU_RENAMER")).action {
 					if (entry != null) {
-						val renamer = RenamerFrame(this@VitaOrganizer, entry!!, "Rename: " + entry!!.title)
+						val renamer = RenamerFrame(this@VitaOrganizer, entry!!)
 						renamer.setLocationRelativeTo(this)
 						renamer.setVisible(true)
 					}
@@ -239,6 +240,9 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				})
 				add(JMenuItem(Texts.format("MENU_REFRESH")).action {
 					updateFileList()
+				})
+				add(JMenuItem(Texts.format("MENU_CLEARDB")).action {
+					clearDatabase()
 				})
 				add(JSeparator())
 				add(JMenuItem(Texts.format("MENU_EXIT")).action {
@@ -481,6 +485,19 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		localTasks.queue(UpdateFileListTask())
 	}
 
+	fun clearDatabase() {
+		localTasks.queue( object: VitaTask() {
+			override fun perform() {
+				synchronized(VitaOrganizer.VPK_GAME_IDS) {
+					VitaOrganizer.VPK_GAME_IDS.forEach { VitaOrganizerCache.entry(it).delete() }
+				}
+				synchronized(VitaOrganizer.VITA_GAME_IDS) {
+					VitaOrganizer.VITA_GAME_IDS.forEach { VitaOrganizerCache.entry(it).delete() }
+				}
+				VitaOrganizer.updateFileList()
+			}
+		} )
+	}
 
 	//fun fileWatchFolder(path: String) {
 	//	val watcher = FileSystems.getDefault().newWatchService()

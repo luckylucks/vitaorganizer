@@ -1,8 +1,6 @@
 package com.soywiz.vitaorganizer
 
 import java.io.*
-import java.util.*
-import kotlin.reflect.KProperty
 
 object VitaOrganizerSettings : AbstractSettings( File("vitaorganizer/settings.properties") ) {
 	var vpkFolder: String by PropDelegate(".")
