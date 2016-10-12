@@ -148,7 +148,7 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					}
 				})
 				add(JMenuItem(Texts.format("MENU_REPACK")).action {
-					if (entry != null) remoteTasks.queue(RepackVpkTask(entry!!, setSecure = true))
+					if (entry != null) remoteTasks.queue(RepackVpkTask(entry!!, setSecure = true, setAppendixC9 = true))
 				})
 				add(JMenuItem(Texts.format("MENU_RENAMER")).action {
 					if (entry != null) {
@@ -490,9 +490,11 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			override fun perform() {
 				synchronized(VitaOrganizer.VPK_GAME_IDS) {
 					VitaOrganizer.VPK_GAME_IDS.forEach { VitaOrganizerCache.entry(it).delete() }
+					VitaOrganizer.VPK_GAME_IDS.clear()
 				}
 				synchronized(VitaOrganizer.VITA_GAME_IDS) {
 					VitaOrganizer.VITA_GAME_IDS.forEach { VitaOrganizerCache.entry(it).delete() }
+					VitaOrganizer.VITA_GAME_IDS.clear()
 				}
 				VitaOrganizer.updateFileList()
 			}

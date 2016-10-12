@@ -54,6 +54,16 @@ class RenamerFrame(val vita: VitaOrganizer, val entry: GameEntry) : JFrame() {
     fun updateRenamedString() {
         var text = renamer.text
         for( r in RenamerStrings.values() ) {
+            for( function in RenamerFunctions.values()) {
+                val fullRegex = r.short + function.regex
+                val found = Regex(fullRegex).find( text )?.value ?: ""
+                //println("Found ${found}")
+
+                if ( found.isNotEmpty() && function.isValid(found)) {
+                    //println("Execute")
+                    text = text.replace(found, function.execute(found, r.value(entry)) )
+                }
+            }
             text = text.replace(r.short, r.value(entry))
         }
         output.setText(text)
@@ -65,7 +75,7 @@ class RenamerFrame(val vita: VitaOrganizer, val entry: GameEntry) : JFrame() {
         val path = file?.path?.replace(file.name.toString(), "")
         val newname = path + output.text
         println("Rename from ${file?.name} to ${newname}" )
-        file?.renameTo( File(newname) )
+        //file?.renameTo( File(newname) )
         VitaOrganizerSettings.renamerString = renamer.text
         VitaOrganizerCache.entry( entry.gameId ).delete()
         vita.updateFileList()
@@ -80,6 +90,31 @@ enum class RenamerStrings(val short: String, val description: String, val value:
     DUMPER("%VT%", Texts.format("RENAMERSTRINGS_DUMPER"), {entry: GameEntry -> entry.dumperVersionShort}),
     COMPRESSION("%COMP%", Texts.format("RENAMERSTRINGS_COMPRESSION"), {entry: GameEntry -> entry.compressionLevel}),
     VERSION("%VER%", Texts.format("RENAMERSTRINGS_VERSION"), {entry: GameEntry -> (entry.psf["APP_VER"] ?: entry.psf["VERSION"] ?: Texts.format("UNKNOWN_VERSION")).toString() }),
+}
+
+enum class RenamerFunctions(val regex: String, val isValid: (text:String)->Boolean, val execute: (found: String, param: String)->String) {
+    OPTIONAL("[\\?]",
+            {text: String -> text.contains(Regex(OPTIONAL.regex))},
+            {found: String, param: String ->
+                when(param.toLowerCase().contains("unknown")) {
+                    true -> ""
+                    else -> param
+                }
+            }
+    ),
+    OPTIONALPLUS("\"[\\s\\S]*,[\\s\\S]*\"[\\?]",
+            {text: String -> text.contains(Regex(OPTIONALPLUS.regex))},
+            {found: String, param: String ->
+                when(param.toLowerCase().contains("unknown")) {
+                    true -> ""
+                    else -> {
+                        val start = Regex("\"[\\s\\S]*,").find(found)!!.value ?: ".."
+                        val end = Regex(",[\\s\\S]*\"").find(found)!!.value ?: ".."
+                        start.substring(1, start.length-1) + param + end.substring(1, end.length-1)
+                    }
+                }
+            }
+    ),
 }
 
 /*

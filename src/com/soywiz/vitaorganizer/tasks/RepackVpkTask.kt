@@ -10,7 +10,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
-class RepackVpkTask(val entry: GameEntry, val compression: Int = Deflater.BEST_COMPRESSION, val setSecure: Boolean? = null) : VitaTask() {
+class RepackVpkTask(val entry: GameEntry, val compression: Int = Deflater.BEST_COMPRESSION, val setSecure: Boolean? = null, val setAppendixC9: Boolean = false) : VitaTask() {
 	override fun perform() {
 		status("Repacking vpk...")
 		val file = entry.vpkLocalFile!!
@@ -78,7 +78,13 @@ class RepackVpkTask(val entry: GameEntry, val compression: Int = Deflater.BEST_C
 
 		println("Renames + deletes:")
 		println(file.renameTo(tempFile2))
-		println(tempFile.renameTo(file))
+		if (setAppendixC9 && file.name.endsWith(".vpk", true)) {
+			val newName = file.absolutePath.take( file.absolutePath.length - ".vpk".length ) + ".C9.vpk"
+			println("New name with C9 Appendix ${newName} successful?:" + tempFile.renameTo( File(newName) ))
+		}
+		else {
+			println(tempFile.renameTo(file))
+		}
 		println(tempFile2.delete())
 		println(entry.entry.delete()) // flush this info!
 
