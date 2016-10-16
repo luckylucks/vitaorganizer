@@ -4,14 +4,17 @@ import com.soywiz.vitaorganizer.*
 import java.util.zip.ZipFile
 import javax.swing.JOptionPane
 
-class SendPromotingVpkToVitaTask(val entry: GameEntry) : VitaTask() {
-	val vpkPath = "ux0:/organizer/${entry.id}.VPK"
+class SendPromotingVpkToVitaTask(vitaOrganizer: VitaOrganizer, val vpkFile: VpkFile) : VitaTask(vitaOrganizer) {
+	val vpkPath = "ux0:/organizer/${vpkFile.id}.VPK"
 
 	override fun checkBeforeQueue() {
 		//updateStatus(Texts.format("STEP_CHECKING_EBOOT_PERMISSIONS"))
-		if (entry.hasExtendedPermissions) {
-			if (!warn("WARNING!", "Game ${entry.id} requires extended permissions.\nAre you sure you want to install it. It could damage your device?")) {
-				throw InterruptedException("Not accepted installing game with extended permissions")
+		if (vpkFile.hasExtendedPermissions) {
+			if (!warn(
+				Texts.format("WARNING_EX"),
+				Texts.format("WARNING_UNSAFE", "id" to vpkFile.id)
+			)) {
+				throw InterruptedException(Texts.format("UNSAFE_NOT_ACCEPTED"))
 			}
 		}
 	}
@@ -21,23 +24,23 @@ class SendPromotingVpkToVitaTask(val entry: GameEntry) : VitaTask() {
 
 		//val zip = ZipFile(entry.vpkFile)
 		try {
-			val vpkData = ZipFile(entry.vpkLocalPath).use { zip -> createSmallVpk(zip) }
+			val vpkData = ZipFile(vpkFile.vpkFile).use { zip -> createSmallVpk(zip) }
 
 			status(Texts.format("STEP_GENERATED_SMALL_VPK_FOR_PROMOTING"))
 
 			PsvitaDevice.uploadFile("/$vpkPath", vpkData) { status ->
 				progress(status.currentSize, status.totalSize)
-				status(Texts.format("STEP_UPLOADING_VPK_FOR_PROMOTING", "current" to status.currentSize, "total" to status.totalSize))
+				status(Texts.format("STEP_UPLOADING_VPK_FOR_PROMOTING", "current" to status.currentSizeString, "total" to status.totalSizeString, "speed" to status.speedString))
 			}
 		} catch (e: Throwable) {
 			e.printStackTrace()
-			JOptionPane.showMessageDialog(VitaOrganizer, "${e.toString()}", "${e.message}", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(vitaOrganizer, "${e.toString()}", "${e.message}", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
 	override fun perform() {
 		performBase()
-		status("Sent game vpk ${entry.id}")
-		info("Now use VitaShell to install\n$vpkPath\n\nAfter that active ftp again and use this program to Send Data to PSVita")
+		status(Texts.format("GAME_SENT_SUCCESSFULLY", "id" to vpkFile.id))
+		info(Texts.format("VITASHELL_INSTALL", "vpkPath" to vpkPath))
 	}
 }

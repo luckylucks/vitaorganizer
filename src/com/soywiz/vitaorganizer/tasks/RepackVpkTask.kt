@@ -1,7 +1,8 @@
 package com.soywiz.vitaorganizer.tasks
 
 import com.soywiz.vitaorganizer.FileSize
-import com.soywiz.vitaorganizer.GameEntry
+import com.soywiz.vitaorganizer.CachedGameEntry
+import com.soywiz.vitaorganizer.Texts
 import com.soywiz.vitaorganizer.VitaOrganizer
 import java.io.File
 import java.io.FileOutputStream
@@ -10,9 +11,9 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
-class RepackVpkTask(val entry: GameEntry, val compression: Int = Deflater.BEST_COMPRESSION, val setSecure: Boolean? = null, val setAppendixC9: Boolean = false) : VitaTask() {
+class RepackVpkTask(vitaOrganizer: VitaOrganizer, val entry: GameEntry, val compression: Int = Deflater.BEST_COMPRESSION, val setSecure: Boolean? = null) : VitaTask(vitaOrganizer) {
 	override fun perform() {
-		status("Repacking vpk...")
+		status(Texts.format("STEP_REPACKING_VPK"))
 		val file = entry.vpkLocalFile!!
 		val tempFile = File("${file.absolutePath}.temp")
 		val tempFile2 = File("${file.absolutePath}.temp2")
@@ -31,9 +32,12 @@ class RepackVpkTask(val entry: GameEntry, val compression: Int = Deflater.BEST_C
 					val totalSize = entries.map { it.size }.sum()
 
 					for ((index, e) in entries.withIndex()) {
-
 						fun updateStatus() {
-							status("Repacking ${index}/${entries.size} :: ${FileSize.toString(currentSize)}/${FileSize.toString(totalSize)}")
+							status(Texts.format(
+								"STEP_REPACKING_ENTRY",
+								"current" to (index + 1), "total" to entries.size,
+								"currentSize" to FileSize.toString(currentSize), "totalSize" to FileSize.toString(totalSize)
+							))
 							progress(index, entries.size)
 						}
 
@@ -72,22 +76,16 @@ class RepackVpkTask(val entry: GameEntry, val compression: Int = Deflater.BEST_C
 				}
 			}
 		}
-		status("Done...")
+		status(Texts.format("STEP_DONE"))
 
 		//Thread.sleep(300L)
 
 		println("Renames + deletes:")
 		println(file.renameTo(tempFile2))
-		if (setAppendixC9 && file.name.endsWith(".vpk", true)) {
-			val newName = file.absolutePath.take( file.absolutePath.length - ".vpk".length ) + ".C9.vpk"
-			println("New name with C9 Appendix ${newName} successful?:" + tempFile.renameTo( File(newName) ))
-		}
-		else {
-			println(tempFile.renameTo(file))
-		}
+		println(tempFile.renameTo(file))
 		println(tempFile2.delete())
 		println(entry.entry.delete()) // flush this info!
 
-		VitaOrganizer.updateFileList()
+		vitaOrganizer.updateFileList()
 	}
 }

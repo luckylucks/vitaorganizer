@@ -1,6 +1,6 @@
-## VitaOrganizer 0.4
+## VitaOrganizer 0.5.2
 
-![](extra/screenshot-0.4.png)
+![](extra/screenshot-0.5.png)
 
 Desktop tool for listing and uploading games and homebrew applications to PSVITA without the size requirements
 of uploading the whole VPK and extracting it later.
@@ -10,12 +10,36 @@ It is written in Kotlin/Java.
 It should work on Windows, Linux and MacOS. It is a Java desktop application, packed in an executable .JAR, that
 can be executed directly with double click on most cases.
 
-In other cases, you can run it with `java -jar vitaorganizer-0.4.jar`
+In other cases, you can run it with `java -jar vitaorganizer-0.5.2.jar`
 
 You can download a prebuild binary here, or just build from source:
-[Download VitaOrganizer 0.4 here](https://github.com/soywiz/vitaorganizer/releases/download/0.4/vitaorganizer-0.4.jar)
+[Download VitaOrganizer 0.5.2 here](https://github.com/soywiz/vitaorganizer/releases/download/0.5.2/)
 
 ## CHANGELOG
+
+**0.5.2**
+
+* Added a couple of new texts (MENU_INSTALL_VPK and STEP_SENDING_GAME_UPLOADING)
+* Updated STEP_UPLOADING_VPK_FOR_PROMOTING supporting %speed%
+* Fixed install in 1-step that was broken in 0.5.1
+* Fixed installing vpk without connecting to psvita previously (that was trying to connect to fixed 192.168.1.130)
+* Added File - Install VPK option to be able to install not listed VPK
+* Capitalized languages in menus
+* Small fixes, improvements and cleanups
+
+~~0.5.1~~ (Do not use, it has known issues) (use 0.5.2 instead)
+
+* Added language menu
+* Fixed languages that were displayed wrong (use 0.5.2 instead)
+* Small internal improvements
+
+~0.5~ (Do not use, it has known issues)
+
+* Filtering feature
+* Dumper Version/Compression Level display
+* About dialog
+* Added 2 level of subdirectories
+* More translations
 
 **0.4**
 
@@ -53,7 +77,7 @@ that should work on desktop java versions.
 In order to generate a native windows executable:
 
 ```
-gradle minimizedJar launch4j
+gradle clean minimizedJar launch4j
 ```
 
 It will generate the file `build/libs/vitaorganizer-VERSION.exe`. It uses launch4j as launcher,

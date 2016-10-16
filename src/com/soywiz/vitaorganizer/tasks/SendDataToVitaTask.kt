@@ -1,16 +1,16 @@
 package com.soywiz.vitaorganizer.tasks
 
-import com.soywiz.vitaorganizer.GameEntry
-import com.soywiz.vitaorganizer.PsvitaDevice
+import com.soywiz.vitaorganizer.*
 import java.util.zip.ZipFile
 
-class SendDataToVitaTask(val entry: GameEntry) : VitaTask() {
+class SendDataToVitaTask(vitaOrganizer: VitaOrganizer, val vpkFile: VpkFile) : VitaTask(vitaOrganizer) {
 	fun performBase() {
-		status("Sending game ${entry.id}...")
+
+		status(Texts.format("STEP_SENDING_GAME", "id" to vpkFile.id))
 		//val zip = ZipFile(entry.vpkFile)
 		try {
-			ZipFile(entry.vpkLocalPath).use { zip ->
-				PsvitaDevice.uploadGame(entry.id, zip, filter = { path ->
+			ZipFile(vpkFile.vpkFile).use { zip ->
+				PsvitaDevice.uploadGame(vpkFile.id, zip, filter = { path ->
 					// Skip files already installed in the VPK
 					if (path == "eboot.bin" || path.startsWith("sce_sys/")) {
 						false
@@ -19,18 +19,18 @@ class SendDataToVitaTask(val entry: GameEntry) : VitaTask() {
 					}
 				}) { status ->
 					//println("$status")
-					status("Uploading ${entry.id} :: ${status.fileRange} :: ${status.sizeRange}")
+					status(Texts.format("STEP_SENDING_GAME_UPLOADING", "id" to vpkFile.id, "fileRange" to status.fileRange, "sizeRange" to status.sizeRange, "speed" to status.speedString))
 				}
 			}
 			//statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
 		} catch (e: Throwable) {
 			error(e.toString())
 		}
-		status("Sent game data ${entry.id}")
+		status(Texts.format("SENT_GAME_DATA", "id" to vpkFile.id))
 	}
 
 	override fun perform() {
 		performBase()
-		info("Game ${entry.id} sent successfully")
+		status(Texts.format("GAME_SENT_SUCCESSFULLY", "id" to vpkFile.id))
 	}
 }

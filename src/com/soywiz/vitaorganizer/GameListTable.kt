@@ -65,7 +65,7 @@ open class GameListTable : JPanel(BorderLayout()) {
 
 				private fun include(item: Any): Boolean {
 					when (item) {
-						is GameEntry -> {
+						is CachedGameEntry -> {
 							for (value in item.psf.values) {
 								if (matcher.containsMatchIn(value.toString())) return true
 							}
@@ -249,10 +249,18 @@ open class GameListTable : JPanel(BorderLayout()) {
 		table.addMouseListener(object : MouseAdapter() {
 			override fun mouseReleased(e: MouseEvent) {
 				super.mouseReleased(e)
-				val row = table.rowAtPoint(Point(e.x, e.y))
 				table.clearSelection()
-				table.addRowSelectionInterval(row, row)
-				if (row >= 0) showMenu()
+
+				val row = table.rowAtPoint(Point(e.x, e.y))
+				if(row < 0 || row > table.rowCount)
+					return;
+
+				try {
+					table.addRowSelectionInterval(row, row)
+					showMenu()
+				} catch (t: Throwable) {
+					t.printStackTrace()
+				}
 			}
 		})
 
@@ -260,16 +268,16 @@ open class GameListTable : JPanel(BorderLayout()) {
 		//filter = "Plant"
 	}
 
-	fun getEntryAtRow(row: Int): GameEntry = model2.getValueAt(table.convertRowIndexToModel(row), 1) as GameEntry
+	fun getEntryAtRow(row: Int): CachedGameEntry = model2.getValueAt(table.convertRowIndexToModel(row), 1) as CachedGameEntry
 
-	val currentEntry: GameEntry get() = getEntryAtRow(table.selectedRow)
+	val currentEntry: CachedGameEntry get() = getEntryAtRow(table.selectedRow)
 
 	fun showMenuForRow(row: Int) {
 		val rect = table.getCellRect(row, 1, true)
 		showMenuAtFor(rect.x, rect.y + rect.height, getEntryAtRow(row))
 	}
 
-	open fun showMenuAtFor(x: Int, y: Int, entry: GameEntry) {
+	open fun showMenuAtFor(x: Int, y: Int, entry: CachedGameEntry) {
 	}
 
 	fun showMenu() {
@@ -283,7 +291,7 @@ open class GameListTable : JPanel(BorderLayout()) {
 		}
 	}
 
-	fun setEntries(games: List<GameEntry>) {
+	fun setEntries(games: List<CachedGameEntry>) {
 		val newRows = arrayListOf<Array<Any>>()
 
 		for (entry in games.sortedBy { it.title }) {
@@ -310,7 +318,7 @@ open class GameListTable : JPanel(BorderLayout()) {
 							Texts.format("LOCATION_NONE")
 						},
 						psf["APP_VER"] ?: psf["VERSION"] ?: Texts.format("UNKNOWN_VERSION"),
-						(if (extendedPermissions) Texts.format("PERMISSIONS_UNSECURE") else Texts.format("PERMISSIONS_SECURE")),
+						(if (extendedPermissions) Texts.format("PERMISSIONS_UNSAFE") else Texts.format("PERMISSIONS_SAFE")),
 						FileSize(entry.size),
 						entry.title
 					))
@@ -321,11 +329,14 @@ open class GameListTable : JPanel(BorderLayout()) {
 			}
 		}
 
-		while (model2.rowCount > 0) model2.removeRow(model2.rowCount - 1)
-		for (row in newRows) model2.addRow(row)
+		if(newRows.any()) {
+			model2.setRowCount(0)
+			
+			for (row in newRows) 
+				model2.addRow(row)
 
-		model2.fireTableDataChanged()
-
+			model2.fireTableDataChanged()
+		}
 
 		//sorter.sort()
 

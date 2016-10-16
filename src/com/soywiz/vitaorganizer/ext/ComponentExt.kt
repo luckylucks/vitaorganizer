@@ -5,11 +5,11 @@ import java.awt.event.MouseEvent
 import javax.swing.*
 
 fun JFrame.showDialog(modal: JFrame) {
-
 	val dialog = JDialog(this, modal.title, true)
 	dialog.contentPane.add(modal.components.first())
 	dialog.pack()
 	dialog.setLocationRelativeTo(this)
+	dialog.isResizable = modal.isResizable
 	dialog.isVisible = true
 	//frame.isEnabled = false
 
@@ -24,16 +24,16 @@ fun JMenuItem.action(callback: () -> Unit): JMenuItem {
 	return this
 }
 
-fun JButton.action(callback: () -> Unit): JButton {
+fun JRadioButtonMenuItem.action(callback: () -> Unit): JRadioButtonMenuItem {
+	addActionListener { callback() }
+	return this
+}
+
+fun <T: JComponent> T.onClick(callback: () -> Unit): T {
 	addMouseListener(object: MouseAdapter() {
 		override fun mouseClicked(e: MouseEvent?) {
 			callback()
 		}
 	})
-	return this
-}
-
-fun JTextField.action(callback: () -> Unit): JTextField {
-	addActionListener { callback() }
 	return this
 }

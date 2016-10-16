@@ -1,11 +1,10 @@
 package com.soywiz.vitaorganizer.tasks
 
-import com.soywiz.vitaorganizer.GameEntry
-import com.soywiz.vitaorganizer.PsvitaDevice
+import com.soywiz.vitaorganizer.*
 
-class OneStepToVitaTask(val entry: GameEntry) : VitaTask() {
-	val sendPromotingVpkTask = SendPromotingVpkToVitaTask(entry)
-	val sendDataTask = SendDataToVitaTask(entry)
+class OneStepToVitaTask(vitaOrganizer: VitaOrganizer, val vpkFile: VpkFile) : VitaTask(vitaOrganizer) {
+	val sendPromotingVpkTask = SendPromotingVpkToVitaTask(vitaOrganizer, vpkFile)
+	val sendDataTask = SendDataToVitaTask(vitaOrganizer, vpkFile)
 
 	override fun checkBeforeQueue() {
 		sendPromotingVpkTask.checkBeforeQueue()
@@ -15,12 +14,15 @@ class OneStepToVitaTask(val entry: GameEntry) : VitaTask() {
 	override fun perform() {
 		sendPromotingVpkTask.performBase()
 
-		status("Promoting VPK (this could take a while)...")
-		PsvitaDevice.promoteVpk(sendPromotingVpkTask.vpkPath)
-		PsvitaDevice.removeFile(sendPromotingVpkTask.vpkPath)
+		status(Texts.format("PROMOTING_VPK"))
+		if(!PsvitaDevice.promoteVpk(sendPromotingVpkTask.vpkPath)) {
+			status("Promoting failed! Task aborted!")
+			return
+		}
+		PsvitaDevice.removeFile("/" + sendPromotingVpkTask.vpkPath)
 
 		sendDataTask.performBase()
 
-		info("Game ${entry.id} sent successfully")
+		info(Texts.format("GAME_SENT_SUCCESSFULLY", "id" to vpkFile.id))
 	}
 }
