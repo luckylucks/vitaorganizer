@@ -26,7 +26,7 @@ class GameEntry(val gameId: String) {
 	val size: Long by lazy { entry.size }
 
 	fun region() : Region {
-		if (id.contains("PCSB") || id.contains("PCSB"))
+		if (id.contains("PCSB") || id.contains("PCSF"))
 			return Region.EUR
 		if (id.contains("PCSE") || id.contains("PCSA"))
 			return Region.USA
