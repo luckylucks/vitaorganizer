@@ -2,6 +2,7 @@ package com.soywiz.vitaorganizer
 
 import com.soywiz.util.stream
 import com.soywiz.vitaorganizer.ext.getScaledImage
+import sun.reflect.annotation.ExceptionProxy
 import java.awt.BorderLayout
 import java.awt.Font
 import java.awt.Point
@@ -9,6 +10,7 @@ import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import javax.imageio.ImageIO
 import javax.swing.*
@@ -299,7 +301,12 @@ open class GameListTable : JPanel(BorderLayout()) {
 				val gameId = entry.gameId
 				val entry2 = VitaOrganizerCache.entry(gameId)
 				val icon = entry2.icon0File
-				val image = ImageIO.read(ByteArrayInputStream(icon.readBytes()))
+				var image: BufferedImage? = ImageIO.read(ByteArrayInputStream(icon.readBytes()))
+				/*try {
+					image = ImageIO.read(ByteArrayInputStream(icon.readBytes()))
+				} catch (e: Exception) {
+					println("Missing picture for: " + entry)
+				}*/
 				val psf = PSF.read(entry2.paramSfoFile.readBytes().stream)
 				val extendedPermissions = entry.hasExtendedPermissions
 

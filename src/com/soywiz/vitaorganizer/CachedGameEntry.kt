@@ -21,6 +21,12 @@ class CachedGameEntry(val gameId: String) {
 		}
 	}
 	val maidump by lazy { entry.maydump }
+	val special by lazy { entry.special }
+	enum class SpecialValue(val short: String, val prettyPrint: String){
+		DLC("DLC", " - DLC"),
+		UPDATE("UPDATE", " - Update")
+	}
+
 	val attribute by lazy { psf["ATTRIBUTE"].toString() }
 	val id by lazy { psf["TITLE_ID"].toString() }
 	val title by lazy { psf["TITLE"].toString() }

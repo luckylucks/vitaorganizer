@@ -53,6 +53,7 @@ object VitaOrganizerCache {
 
         var dumperVersion: String by PropDelegate("")
         var compression: String by PropDelegate("")
+		var special: String by PropDelegate("")		//reserved for updates and dlc
 
         //internal String representations for non string variables
         var sizeString: String by PropDelegate("")

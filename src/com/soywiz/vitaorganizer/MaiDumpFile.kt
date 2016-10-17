@@ -1,17 +1,20 @@
 package com.soywiz.vitaorganizer
 
 import com.soywiz.util.*
-import com.soywiz.vitaorganizer.ext.getBytes
 import net.sf.sevenzipjbinding.IInArchive
 import net.sf.sevenzipjbinding.SevenZip
 import net.sf.sevenzipjbinding.SevenZipException
 import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream
 import net.sf.sevenzipjbinding.simple.ISimpleInArchiveItem
 import net.sf.sevenzipjbinding.util.ByteArrayStream
+import java.awt.Color
+import java.awt.Font
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.io.RandomAccessFile
-import java.util.zip.ZipFile
+import javax.imageio.ImageIO
 
 class MaiDumpFile(val file: File) {
 
@@ -85,9 +88,25 @@ class MaiDumpFile(val file: File) {
 		val psf = PSF.read( MemoryStream2( psfFile.byteArray!! ) )
 
 		val gameId = psf["TITLE_ID"].toString()
-		retGameId = gameId
+		var readedGameId = gameId
+		var special = ""
 
-		val entry = VitaOrganizerCache.entry(gameId)
+		//all updates, maybe all dlc? should have a PSF file, if not PSF.read (a few lines above) already crashed
+		//no icons for dlc, unknown for updates
+		if ( retGameId?.contains(readedGameId) ?: false ) {
+			if ( !retGameId!!.equals(readedGameId) ) {
+				//both ids are not equal but similar, e.g.
+				//PCSE0001 and PCSE0001_addc for dlc
+				//updates??
+				if (retGameId!!.contains("_addc")) {
+					readedGameId = gameId + CachedGameEntry.SpecialValue.DLC.prettyPrint
+					special = CachedGameEntry.SpecialValue.DLC.short
+					iconFile.byteArray = MakeImages.makeTextImage("DLC", 2, 40, 30)
+				}
+			}
+		}
+
+		val entry = VitaOrganizerCache.entry(readedGameId)
 
 		var dumper = DumperNames.findDumperByShortName(if(psf["ATTRIBUTE"].toString() == "32768") "HB" else "UNKNOWN")
 		if(dumper == DumperNames.UNKNOWN) {
@@ -109,7 +128,7 @@ class MaiDumpFile(val file: File) {
 			entry.compression = compressionlevel
 		}
 
-		if (!entry.icon0File.exists()) {
+		if (!entry.icon0File.exists() && iconFile.byteArray != null) {
 			entry.icon0File.writeBytes( iconFile.byteArray!! )
 		}
 		if (!entry.paramSfoFile.exists()) {
@@ -118,15 +137,16 @@ class MaiDumpFile(val file: File) {
 		if (entry.size <= 0L) {
 			entry.size = fullSize
 		}
-		if (entry.permissionsString.isEmpty()) {
+		if (entry.permissionsString.isEmpty() && !special.equals(CachedGameEntry.SpecialValue.DLC.short)) {
 			entry.permissions = EbootBin.hasExtendedPermissions(ebootFile.byteArray!!.open2("r"))
 		}
 		if (entry.pathFile.isEmpty() || !entry.pathFile.equals(file.absolutePath)) {
 			entry.pathFile = file.absolutePath
 		}
 		entry.maydump = true
+		entry.special = special
 
-		return retGameId
+		return readedGameId
 	}
 
 	//Check if game was completely scanned, extracted partial from archive can be extremely time consuming
@@ -152,5 +172,21 @@ class ArchiveEntry {
 		item.extractSlow( bas )
 		byteArray = bas.bytes
 		bas.close()
+	}
+}
+
+object MakeImages {
+	fun makeTextImage(text: String, x: Int, y: Int, fontSize: Int) : ByteArray{
+		val buffer = BufferedImage(64, 64, BufferedImage.TYPE_4BYTE_ABGR)
+		val g2d = buffer.createGraphics()
+
+		g2d.color = Color.BLACK
+		g2d.font = Font(Font.SERIF, Font.BOLD, fontSize)
+		g2d.drawString(text, x, y)
+
+		g2d.dispose()
+		val baos = ByteArrayOutputStream()
+		ImageIO.write(buffer, "png", baos)
+		return baos.toByteArray()
 	}
 }
