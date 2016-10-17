@@ -1,7 +1,7 @@
 package com.soywiz.vitaorganizer
 
 import com.soywiz.util.stream
-import com.soywiz.util.DumperNamesHelper
+import com.soywiz.util.DumperNames
 import java.io.File
 
 class CachedGameEntry(val gameId: String) {
@@ -15,11 +15,12 @@ class CachedGameEntry(val gameId: String) {
 	}
 	val hasExtendedPermissions by lazy {
 		try {
-			entry.permissionsFile.readText().toBoolean()
+			entry.permissions
 		} catch (e: Throwable) {
 			true
 		}
 	}
+	val maidump by lazy { entry.maydump }
 	val attribute by lazy { psf["ATTRIBUTE"].toString() }
 	val id by lazy { psf["TITLE_ID"].toString() }
 	val title by lazy { psf["TITLE"].toString() }
@@ -27,16 +28,27 @@ class CachedGameEntry(val gameId: String) {
         var text = "UNKNOWN";
 		if(attribute == "32768")
 			text = "HB"
-    	else if(entry.dumperVersionFile.exists())
-			text = entry.dumperVersionFile.readText(); 
+    	else if(entry.dumperVersion.isNotEmpty())
+			text = entry.dumperVersion
 
-        DumperNamesHelper().findDumperByShortName(text).longName 
+        DumperNames.findDumperByShortName(text).longName
     }
+	val dumperVersionShort by lazy { DumperNames.findDumperByShortName( entry.dumperVersion).shortName }
+	fun region() : GameEntry.Region {
+		if (id.contains("PCSB") || id.contains("PCSF"))
+			return GameEntry.Region.EUR
+		if (id.contains("PCSE") || id.contains("PCSA"))
+			return GameEntry.Region.USA
+		if (id.contains("PCSG") || id.contains("PCSC"))
+			return GameEntry.Region.JPN
+		return GameEntry.Region.UNKNOWN
+	}
+
 	val compressionLevel by lazy { 
-        if(entry.compressionFile.exists())  {
+        if(entry.compression.isNotEmpty())  {
 			//see https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
 			//4.4.5
-			val method = entry.compressionFile.readText() 
+			val method = entry.compression
 			if(method == "0")
 				"not compressed"
 			else if(method == "1")
@@ -65,16 +77,23 @@ class CachedGameEntry(val gameId: String) {
     }
 	var inVita = false
 	var inPC = false
-	val vpkLocalPath: String? get() = entry.pathFile.readText(Charsets.UTF_8)
+	val vpkLocalPath: String? get() = entry.pathFile
 	val vpkLocalFile: File? get() = if (vpkLocalPath != null) File(vpkLocalPath!!) else null
 	val vpkLocalVpkFile: VpkFile? get() = if (vpkLocalPath != null) VpkFile(File(vpkLocalPath!!)) else null
 	val size: Long by lazy {
 		try {
-			entry.sizeFile.readText().toLong()
+			entry.size
 		} catch (e: Throwable) {
 			0L
 		}
 	}
 
 	override fun toString(): String = id
+}
+
+enum class Region(val short: String, val long: String) {
+	EUR("EUR", "Europe"),
+	JPN("JPN", "Japan"),
+	USA("USA", "North America"),
+	UNKNOWN("UNKNOWN", "Unknown")
 }

@@ -2,7 +2,6 @@ package com.soywiz.vitaorganizer
 
 import com.soywiz.util.DumperModules
 import com.soywiz.util.DumperNames
-import com.soywiz.util.DumperNamesHelper
 import com.soywiz.util.open2
 import com.soywiz.vitaorganizer.ext.getBytes
 import java.io.File
@@ -59,22 +58,25 @@ class VpkFile(val vpkFile: File) {
 				val paramsfo = zip.getEntry("sce_sys/param.sfo")
 				val compressionLevel = if (paramsfo != null) paramsfo.method.toString() else ""
 
-				var dumper = DumperNamesHelper().findDumperByShortName(if(psf["ATTRIBUTE"].toString() == "32768") "HB" else "UNKNOWN")
+				var dumper = DumperNames.findDumperByShortName(if(psf["ATTRIBUTE"].toString() == "32768") "HB" else "UNKNOWN")
 				if(dumper == DumperNames.UNKNOWN) {
 					for (file in DumperModules.values()) {
 						val suprx = zip.getEntry(file.file)
 						if (suprx != null) {
-							dumper = DumperNamesHelper().findDumperBySize(suprx.size)
+							dumper = DumperNames.findDumperBySize(suprx.size)
 						}
 					}
 				}
 
-				println("For file [${vpkFile}] (Compressmethod : $compressionLevel Dumpver : ${dumper})")
-				if (!entry.compressionFile.exists()) {
-					entry.compressionFile.writeText(compressionLevel.toString())
+				val matcher = Regex("[cC]\\d").find(vpkFile.name)		//find one! string from C0 till C9, can be ambiguous ex. part of name or id
+				val compressionlevel = matcher?.value ?: "unknown"
+
+				println("For file ${vpkFile} Dumperversion : ${dumper} Compressionlevel : ${compressionlevel}")
+				if (entry.dumperVersion.isEmpty()) {
+					entry.dumperVersion = dumper.shortName.toString()
 				}
-				if (!entry.dumperVersionFile.exists()) {
-					entry.dumperVersionFile.writeText(dumper.shortName)
+				if (entry.compression.isEmpty()) {
+					entry.compression = compressionlevel
 				}
 
 				if (!entry.icon0File.exists()) {
@@ -83,16 +85,17 @@ class VpkFile(val vpkFile: File) {
 				if (!entry.paramSfoFile.exists()) {
 					entry.paramSfoFile.writeBytes(paramSfoData)
 				}
-				if (!entry.sizeFile.exists()) {
-					val uncompressedSize = zipEntries.toList().map { it.size }.sum()
-					entry.sizeFile.writeText("" + uncompressedSize)
+				if (entry.size <= 0L) {
+					val uncompressedSize = ZipFile(vpkFile).entries().toList().map { it.size }.sum()
+					entry.size = uncompressedSize
 				}
-				if (!entry.permissionsFile.exists()) {
+				if (entry.permissionsString.isEmpty()) {
 					val ebootBinData = zip.getBytes("eboot.bin")
-					entry.permissionsFile.writeText("" + EbootBin.hasExtendedPermissions(ebootBinData.open2("r")))
+					entry.permissions = EbootBin.hasExtendedPermissions(ebootBinData.open2("r"))
 				}
-				entry.pathFile.writeBytes(vpkFile.absolutePath.toByteArray(Charsets.UTF_8))
-				//getGameEntryById(gameId).inPC = true
+				if (entry.pathFile.isEmpty() || !entry.pathFile.equals(vpkFile.absolutePath)) {
+					entry.pathFile = vpkFile.absolutePath
+				}
 			}
 		} catch (e: Throwable) {
 			println("Error processing ${vpkFile.name}")

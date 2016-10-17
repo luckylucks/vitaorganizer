@@ -9,8 +9,7 @@ enum class DumperNames(val shortName: String, val longName: String, val file: St
     HOMEBREW("HB", "Normal homebrew", "", -1L),
 	NKNOWNMAI("UNKNOWN_MAI", "Unknown Mai Dumper", DumperModules.MAI.file, -1L),
 	UNKNOWNVITAMIN("UNKNOWN_VITAMIN", "Unknown Vitamin Dumper", DumperModules.VITAMIN.file, -1L),
-    UNKNOWN("UNKNOWN", "Unknown Dumper Version", "", -1L)
-}
+    UNKNOWN("UNKNOWN", "Unknown Dumper Version", "", -1L);
 
     companion object {
         fun findDumperBySize(size: Long, dumperModule: DumperModules? = null) = values().firstOrNull { it.size == size } ?: DumperModules.findUnknownDumper(dumperModule?.unknown)
@@ -27,6 +26,5 @@ enum class DumperModules(val file: String, val unknown: String) {
             is String -> DumperNames.findDumperByShortName(shortName)
             else -> DumperNames.UNKNOWN
         }
-        return DumperNames.UNKNOWN
     }
 }

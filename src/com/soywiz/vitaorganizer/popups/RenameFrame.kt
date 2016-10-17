@@ -10,7 +10,7 @@ import java.io.File
 import java.util.*
 import javax.swing.*
 
-class RenamerFrame(val vita: VitaOrganizer, val entry: GameEntry) : JFrame() {
+class RenamerFrame(val vita: VitaOrganizer, val entry: CachedGameEntry) : JFrame() {
 
     val renamer = JTextField(VitaOrganizerSettings.renamerString).action { updateRenamedString() }
     val output = JTextField("Test")
@@ -83,13 +83,13 @@ class RenamerFrame(val vita: VitaOrganizer, val entry: GameEntry) : JFrame() {
     }
 }
 
-enum class RenamerStrings(val short: String, val description: String, val value: (entry: GameEntry)->String) {
-    TITLE("%TITLE%", Texts.format("RENAMERSTRINGS_TITLE"), {entry: GameEntry -> entry.title}),
-    ID("%ID%", Texts.format("RENAMERSTRINGS_ID"), {entry: GameEntry -> entry.gameId}),
-    LANGUAGE("%REG%", Texts.format("RENAMERSTRINGS_REGION"), {entry: GameEntry -> entry.region().short}),
-    DUMPER("%VT%", Texts.format("RENAMERSTRINGS_DUMPER"), {entry: GameEntry -> entry.dumperVersionShort}),
-    COMPRESSION("%COMP%", Texts.format("RENAMERSTRINGS_COMPRESSION"), {entry: GameEntry -> entry.compressionLevel}),
-    VERSION("%VER%", Texts.format("RENAMERSTRINGS_VERSION"), {entry: GameEntry -> (entry.psf["APP_VER"] ?: entry.psf["VERSION"] ?: Texts.format("UNKNOWN_VERSION")).toString() }),
+enum class RenamerStrings(val short: String, val description: String, val value: (entry: CachedGameEntry)->String) {
+    TITLE("%TITLE%", Texts.format("RENAMERSTRINGS_TITLE"), {entry: CachedGameEntry -> entry.title}),
+    ID("%ID%", Texts.format("RENAMERSTRINGS_ID"), {entry: CachedGameEntry -> entry.gameId}),
+    LANGUAGE("%REG%", Texts.format("RENAMERSTRINGS_REGION"), {entry: CachedGameEntry -> entry.region().short}),
+    DUMPER("%VT%", Texts.format("RENAMERSTRINGS_DUMPER"), {entry: CachedGameEntry -> entry.dumperVersionShort}),
+    COMPRESSION("%COMP%", Texts.format("RENAMERSTRINGS_COMPRESSION"), {entry: CachedGameEntry -> entry.compressionLevel}),
+    VERSION("%VER%", Texts.format("RENAMERSTRINGS_VERSION"), {entry: CachedGameEntry -> (entry.psf["APP_VER"] ?: entry.psf["VERSION"] ?: Texts.format("UNKNOWN_VERSION")).toString() }),
 }
 
 enum class RenamerFunctions(val regex: String, val isValid: (text:String)->Boolean, val execute: (found: String, param: String)->String) {

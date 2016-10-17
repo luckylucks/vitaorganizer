@@ -15,4 +15,5 @@ object VitaOrganizerSettings : AbstractSettings( File("vitaorganizer/settings.pr
 	val LANGUAGE_LOCALE: Locale get() = if (isLanguageAutodetect) Locale.getDefault() else Locale(LANGUAGE)
 
 	var renamerString: String by PropDelegate("%TITLE% [v%VER%][%ID%][%REG%][%VT%].vpk")
+	var qcmaDirectory: String by PropDelegate("")
 }

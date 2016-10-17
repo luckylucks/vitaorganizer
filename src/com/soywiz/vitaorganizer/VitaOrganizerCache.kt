@@ -39,6 +39,17 @@ object VitaOrganizerCache {
             set(value) {
                 permissionsString = value.toString()
             }
+		var maydump: Boolean    //maydumps should only be installed through and there have a different structure
+			get() {
+				try {
+					return maydumpString.toBoolean()
+				} catch (e: Throwable) {
+					return false
+				}
+			}
+			set(value) {
+				maydumpString = value.toString()
+			}
 
         var dumperVersion: String by PropDelegate("")
         var compression: String by PropDelegate("")
@@ -46,6 +57,7 @@ object VitaOrganizerCache {
         //internal String representations for non string variables
         var sizeString: String by PropDelegate("")
         var permissionsString: String by PropDelegate("")
+		var maydumpString: String by PropDelegate("")
 
         fun delete() {  //Normally if one delete fails, all should fail -> game is already deleted
             deleteFile(icon0File)

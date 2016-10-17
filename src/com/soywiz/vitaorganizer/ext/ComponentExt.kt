@@ -37,3 +37,13 @@ fun <T: JComponent> T.onClick(callback: () -> Unit): T {
 	})
 	return this
 }
+
+fun JTextField.action(callback: () -> Unit): JTextField {
+	addActionListener { callback() }
+	return this
+}
+
+fun JButton.action(callback: () -> Unit): JButton {
+	addActionListener { callback() }
+	return this
+}

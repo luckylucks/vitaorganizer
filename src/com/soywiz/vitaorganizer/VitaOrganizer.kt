@@ -1,6 +1,5 @@
 package com.soywiz.vitaorganizer
 
-import com.soywiz.util.DumperModules
 import com.soywiz.util.OS
 import com.soywiz.util.open2
 import com.soywiz.vitaorganizer.ext.action
@@ -154,6 +153,16 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					frame.showDialog(KeyValueViewerFrame(Texts.format("PSF_VIEWER_TITLE", "id" to entry!!.id, "title" to entry!!.title), entry!!.psf))
 				}
 			}
+			val showMaiDumpQCMA = JMenuItem(Texts.format("MENU_MAIDUMP_QCMA")).action {
+				if (entry != null) {
+					remoteTasks.queue( UnpackMaiDumpQCMA(vitaOrganizer, entry!!) )
+				}
+			}
+			val showMaiDumpFTP = JMenuItem(Texts.format("MENU_MAIDUMP_FTP")).action {
+				if (entry != null) {
+					remoteTasks.queue( UnpackMaiDumpQCMA(vitaOrganizer, entry!!) )
+				}
+			}
 
 			init {
 				add(gameTitlePopup)
@@ -183,6 +192,12 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					isEnabled = false
 				})
 				add(sendToVita1Step)
+				add(JSeparator())
+				add(JMenuItem(Texts.format("METHOD3_INFO")).apply {
+					isEnabled = false
+				})
+				add(showMaiDumpQCMA)
+				add(showMaiDumpFTP)
 			}
 
 			override fun show(invoker: Component?, x: Int, y: Int) {
@@ -197,6 +212,8 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				showInFilebrowser.isEnabled = false
 				repackVpk.isEnabled = false
 				showPSF.isEnabled = false;
+				showMaiDumpQCMA.isEnabled = false
+				showMaiDumpFTP.isEnabled = false
 
 				if (entry != null) {
 					gameDumperVersionPopup.text = Texts.format("DUMPER_VERSION", "version" to entry.dumperVersion)
@@ -211,6 +228,8 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					showInFilebrowser.isEnabled = entry.inPC
 					repackVpk.isEnabled = entry.inPC
 					showPSF.isEnabled = true
+					if(entry.maidump) showMaiDumpQCMA.isEnabled = true
+					if(entry.maidump) showMaiDumpFTP.isEnabled = true
 				}
 
 				super.show(invoker, x, y)
@@ -318,6 +337,16 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 						}
 					}
 					Unit
+				})
+				add(JRadioButtonMenuItem(Texts.format("MENU_SETPSPSAVEDATA")).action {
+					val dir = VitaOrganizerSettings.qcmaDirectory
+					val chooser = JFileChooser(File(dir))
+					chooser.dialogTitle = Texts.format("MENU_SETPSPSAVEDATA")
+					chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
+					val result = chooser.showOpenDialog(this@VitaOrganizer)
+					if (result == JFileChooser.APPROVE_OPTION) {
+						VitaOrganizerSettings.qcmaDirectory = chooser.selectedFile!!.toString()
+					}
 				})
 			})
 			add(JMenu(Texts.format("MENU_HELP")).apply {
@@ -551,17 +580,17 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	}
 
 	fun clearDatabase() {
-		localTasks.queue( object: VitaTask() {
+		localTasks.queue( object: VitaTask(vitaOrganizer) {
 			override fun perform() {
-				synchronized(VitaOrganizer.VPK_GAME_IDS) {
-					VitaOrganizer.VPK_GAME_IDS.forEach { VitaOrganizerCache.entry(it).delete() }
-					VitaOrganizer.VPK_GAME_IDS.clear()
+				synchronized(vitaOrganizer.VPK_GAME_IDS) {
+					vitaOrganizer.VPK_GAME_IDS.forEach { VitaOrganizerCache.entry(it).delete() }
+					vitaOrganizer.VPK_GAME_IDS.clear()
 				}
-				synchronized(VitaOrganizer.VITA_GAME_IDS) {
-					VitaOrganizer.VITA_GAME_IDS.forEach { VitaOrganizerCache.entry(it).delete() }
-					VitaOrganizer.VITA_GAME_IDS.clear()
+				synchronized(vitaOrganizer.VITA_GAME_IDS) {
+					vitaOrganizer.VITA_GAME_IDS.forEach { VitaOrganizerCache.entry(it).delete() }
+					vitaOrganizer.VITA_GAME_IDS.clear()
 				}
-				VitaOrganizer.updateFileList()
+				vitaOrganizer.updateFileList()
 			}
 		} )
 	}

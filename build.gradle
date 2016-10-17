@@ -15,7 +15,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+		classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "net.sf.proguard:proguard-gradle:$proguard_version"
         classpath "gradle.plugin.edu.sc.seis.gradle:launch4j:$launch4j_version"
     }
@@ -46,7 +46,10 @@ sourceSets {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+	compile group: 'net.sf.sevenzipjbinding', name: 'sevenzipjbinding', version: '9.20-2.00beta', transitive: true
+	compile group: 'net.sf.sevenzipjbinding', name: 'sevenzipjbinding-all-platforms', version: '9.20-2.00beta', transitive: true
+
+	compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile "org.jetbrains:annotations-java5:15.0"
     //compile "commons-net:commons-net:3.5"
     testCompile "junit:junit:4.11"

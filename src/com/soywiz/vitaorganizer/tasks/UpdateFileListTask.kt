@@ -1,13 +1,7 @@
 package com.soywiz.vitaorganizer.tasks
 
-import com.soywiz.util.open2
 import com.soywiz.vitaorganizer.*
-import com.soywiz.util.DumperNamesHelper
-import com.soywiz.util.DumperModules
-import com.soywiz.util.DumperNames
-import com.soywiz.vitaorganizer.ext.getBytes
 import java.io.File
-import java.util.zip.ZipFile
 
 class UpdateFileListTask(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer) {
 	override fun perform() {
@@ -41,7 +35,37 @@ class UpdateFileListTask(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer)
 					vitaOrganizer.VPK_GAME_IDS += gameId
 				}
 			}
+		}
 
+		fun listMaiDumpFiles(folder: File, level: Int = 0): List<File> {
+				val out = arrayListOf<File>()
+				if (level > MAX_SUBDIRECTORY_LEVELS) return out
+				for (child in folder.listFiles()) {
+					if (child.isDirectory) {
+						out += listVpkFiles(child, level = level + 1)
+					} else {
+						val acceptableTypes = arrayOf("zip", "7z", "rar")
+						if (child.extension.toLowerCase() in acceptableTypes ) out += child
+					}
+				}
+				return out
+			}
+
+		val maiDumpFiles = listMaiDumpFiles(File(VitaOrganizerSettings.vpkFolder))
+		for (maiDumpFile in maiDumpFiles) {
+			val ff = MaiDumpFile(maiDumpFile)
+			try {
+				status(Texts.format("UPDATEFILELISTTASK", "current" to maiDumpFile))
+				val gameId = ff.cacheAndGetGameId()
+				if (gameId != null) {
+					synchronized(vitaOrganizer.VPK_GAME_IDS) {
+						vitaOrganizer.VPK_GAME_IDS += gameId
+					}
+				}
+			} catch (e: Exception) {
+				println("Error processing : " + maiDumpFile)
+				e.printStackTrace()
+			}
 			//Thread.sleep(200L)
 		}
 		status(Texts.format("STEP_DONE"))
