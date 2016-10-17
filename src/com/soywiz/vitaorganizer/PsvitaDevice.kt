@@ -5,10 +5,9 @@ import it.sauronsoftware.ftp4j.FTPDataTransferListener
 import it.sauronsoftware.ftp4j.FTPException
 import it.sauronsoftware.ftp4j.FTPFile
 import it.sauronsoftware.ftp4j.FTPReply
-import java.io.ByteArrayInputStream
-import java.io.File
-import java.io.FileNotFoundException
-import java.io.IOException
+import net.sf.sevenzipjbinding.*
+import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream
+import java.io.*
 import java.net.InetSocketAddress
 import java.net.NetworkInterface
 import java.net.Socket
@@ -300,6 +299,71 @@ object PsvitaDevice {
         println("DONE. Now package should be promoted!")
     }
 
+	fun uploadGameMaiDump(id: String, file: File, updateStatus: (Status) -> Unit = { }) {
+		val base = getGameFolder(id)
+
+		val status = Status()
+
+		var randomAccessFile: RandomAccessFile? = null
+		var inArchive: IInArchive? = null
+		try {
+			randomAccessFile = RandomAccessFile(file, "r")
+			inArchive = SevenZip.openInArchive(null, // autodetect archive type
+				RandomAccessFileInStream(randomAccessFile))
+
+			// Getting simple interface of the archive inArchive
+			val simpleInArchive = inArchive!!.getSimpleInterface()
+
+			var fullSize = 0L
+			var fullCount = 0
+			for (item in simpleInArchive.archiveItems) {
+				fullSize += item.size
+				fullCount++
+			}
+
+			status.totalFiles = fullCount
+			status.totalSize = fullSize
+		} catch (e: Exception) {
+			System.err.println("Error occurs: " + e)
+		} finally {
+			if (inArchive != null) {
+				try {
+					inArchive!!.close()
+				} catch (e: SevenZipException) {
+					System.err.println("Error closing archive: " + e.printStackTrace())
+				}
+
+			}
+			if (randomAccessFile != null) {
+				try {
+					randomAccessFile.close()
+				} catch (e: IOException) {
+					System.err.println("Error closing file: " + e.printStackTrace())
+				}
+
+			}
+		}
+
+		status.currentFile = 0
+		status.currentSize = 0L
+		status.startTime = System.currentTimeMillis()
+
+		try {
+			randomAccessFile = RandomAccessFile(file, "r")
+			inArchive = SevenZip.openInArchive(null, RandomAccessFileInStream(randomAccessFile))
+			inArchive!!.extract(null, false, MyExtractFTPCallback(inArchive, status, updateStatus))
+		} finally {
+			if (inArchive != null) {
+				inArchive.close()
+			}
+			if (randomAccessFile != null) {
+				randomAccessFile.close()
+			}
+		}
+
+		println("DONE. MaiDump Transfer completed")
+	}
+
     fun uploadFile(path: String, data: ByteArray, updateStatus: (Status) -> Unit = { }) {
         val status = Status()
         createDirectories(File(path).parent)
@@ -394,4 +458,99 @@ object PsvitaDevice {
 	fun error(text: String) {
 		JOptionPane.showMessageDialog(null, text, "Error", JOptionPane.ERROR_MESSAGE)
 	}
+
+	class MyExtractFTPCallback(private val inArchive: IInArchive, val status: Status, val updateStatus: (Status) -> Unit = { }) : IArchiveExtractCallback {
+
+		init {
+		}
+
+		@Throws(SevenZipException::class)
+		override fun getStream(index: Int, extractAskMode: ExtractAskMode): ISequentialOutStream {
+			return ISequentialOutStream { data ->
+				val filePath = inArchive.getStringProperty(index, PropID.PATH)
+				try {
+					val normalizedName = filePath.replace('\\', '/')
+					val vname = "/ux0:/mai/$normalizedName"
+					val directory = File(vname).parent.replace('\\', '/')
+					val startSize = status.currentSize
+
+					val prop = inArchive.getStringProperty(index, PropID.IS_FOLDER)
+					println("Property :" + prop + " name :" + filePath)
+					//only found files, no directories (rar) -> could be different for zip, 7z
+					//non directories gives "-" for rar
+					if (prop.equals("-")) {
+						PsvitaDevice.createDirectories(directory)
+
+						print("Writting $vname...")
+						//missing inputstream
+						PsvitaDevice.connectedFtp().upload(vname, null, 0L, 0L, object : FTPDataTransferListener {
+							override fun started() {
+								print("started...")
+							}
+
+							override fun completed() {
+								print("completed!")
+								updateStatus(status)
+
+								//untested
+								//if(status.currentSize != status.totalSize) {
+								//    println("$vname mismatch transfered size. $status.currentSize != $status.totalSize")
+								//
+							}
+
+							override fun aborted() {
+								print("aborted!")
+							}
+
+							override fun transferred(size: Int) {
+								status.currentSize += size
+								updateStatus(status)
+							}
+
+							override fun failed() {
+								print("failed!")
+							}
+						})
+
+						println("")
+					}
+					status.currentSize = startSize + inArchive.getStringProperty(index, PropID.SIZE).toLong()
+					status.currentFile++
+					updateStatus(status)
+
+
+				} catch (e: IOException) {
+					e.printStackTrace()
+				} finally {
+					try {
+						//if (fos != null) {
+						//	fos.flush()
+						//	fos.close()
+						//}
+					} catch (e: IOException) {
+						e.printStackTrace()
+					}
+
+				}
+				data.size
+			}
+		}
+
+		@Throws(SevenZipException::class)
+		override fun prepareOperation(extractAskMode: ExtractAskMode) {
+		}
+
+		@Throws(SevenZipException::class)
+		override fun setOperationResult(extractOperationResult: ExtractOperationResult) {
+		}
+
+		@Throws(SevenZipException::class)
+		override fun setCompleted(completeValue: Long) {
+		}
+
+		@Throws(SevenZipException::class)
+		override fun setTotal(total: Long) {
+		}
+	}
 }
+

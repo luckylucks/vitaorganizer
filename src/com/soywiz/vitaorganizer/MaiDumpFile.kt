@@ -57,6 +57,7 @@ class MaiDumpFile(val file: File) {
 					if ( !checkGame(retGameId) ) return retGameId
 				}
 
+				//quite slow, for every file the whole archive will be scanned, using filter and inArchive!!.extract would be better
 				when {
 					path.endsWith("\\sce_sys\\param.sfo") -> psfFile.readAll(item)
 					path.endsWith("\\sce_sys\\icon0.png") -> iconFile.readAll(item)
@@ -97,11 +98,17 @@ class MaiDumpFile(val file: File) {
 			if ( !retGameId!!.equals(readedGameId) ) {
 				//both ids are not equal but similar, e.g.
 				//PCSE0001 and PCSE0001_addc for dlc
-				//updates??
 				if (retGameId!!.contains("_addc")) {
 					readedGameId = gameId + CachedGameEntry.SpecialValue.DLC.prettyPrint
 					special = CachedGameEntry.SpecialValue.DLC.short
 					iconFile.byteArray = MakeImages.makeTextImage("DLC", 2, 40, 30)
+				}
+				//updates??, not sure if they changed the format, or are from vitamin or something else
+				if (retGameId!!.contains("_patch")) {
+					readedGameId = gameId + CachedGameEntry.SpecialValue.UPDATE.prettyPrint
+					special = CachedGameEntry.SpecialValue.UPDATE.short
+					iconFile.byteArray = MakeImages.makeTextImage("Update", 2, 40, 20)
+					return null
 				}
 			}
 		}

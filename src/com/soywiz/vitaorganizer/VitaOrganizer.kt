@@ -160,7 +160,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			}
 			val showMaiDumpFTP = JMenuItem(Texts.format("MENU_MAIDUMP_FTP")).action {
 				if (entry != null) {
-					remoteTasks.queue( UnpackMaiDumpQCMA(vitaOrganizer, entry!!) )
+					remoteTasks.queue( SendMaiDumpToVitaTask(vitaOrganizer, entry!!) )
 				}
 			}
 
