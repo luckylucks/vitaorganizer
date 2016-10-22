@@ -54,16 +54,19 @@ class UpdateFileListTask(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer)
 		val maiDumpFiles = listMaiDumpFiles(File(VitaOrganizerSettings.vpkFolder))
 		for (maiDumpFile in maiDumpFiles) {
 			val ff = MaiDumpFile(maiDumpFile)
+			println("Maidumping : " + maiDumpFile.path)
 			try {
 				status(Texts.format("UPDATEFILELISTTASK", "current" to maiDumpFile))
 				val gameId = ff.cacheAndGetGameId()
+				System.gc()			//extracting archives can exhaust memory (less probable)
+									//or filechunks vary extremely for different types of archives
 				if (gameId != null) {
 					synchronized(vitaOrganizer.VPK_GAME_IDS) {
 						vitaOrganizer.VPK_GAME_IDS += gameId
 					}
 				}
 			} catch (e: Exception) {
-				println("Error processing : " + maiDumpFile)
+				println("Error processing in UpdateFileListTask Maidump: " + maiDumpFile)
 				e.printStackTrace()
 			}
 			//Thread.sleep(200L)

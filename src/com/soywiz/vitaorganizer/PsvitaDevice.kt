@@ -460,6 +460,8 @@ object PsvitaDevice {
 	}
 
 	class MyExtractFTPCallback(private val inArchive: IInArchive, val status: Status, val updateStatus: (Status) -> Unit = { }) : IArchiveExtractCallback {
+		var lastFileUploaded = ""
+		var lastFileSize = 0L
 
 		init {
 		}
@@ -473,6 +475,7 @@ object PsvitaDevice {
 					val vname = "/ux0:/mai/$normalizedName"
 					val directory = File(vname).parent.replace('\\', '/')
 					val startSize = status.currentSize
+					var incrementFileStatus = 1
 
 					val prop = inArchive.getStringProperty(index, PropID.IS_FOLDER)
 					println("Property :" + prop + " name :" + filePath)
@@ -481,9 +484,21 @@ object PsvitaDevice {
 					if (prop.equals("-")) {
 						PsvitaDevice.createDirectories(directory)
 
+						//hopefully fixes resuming of uploads
+						//7zip can gives chunks of big files, not java streaming friendly
+						if (lastFileUploaded.equals(vname)) {
+							//upload another chunk of the last file used
+							incrementFileStatus = 0
+						} else {
+							//new file to be uploaded, last file completed
+							lastFileUploaded = vname
+							lastFileSize = 0L
+						}
+
 						print("Writting $vname...")
+						val bais = ByteArrayInputStream(data)
 						//missing inputstream
-						PsvitaDevice.connectedFtp().upload(vname, null, 0L, 0L, object : FTPDataTransferListener {
+						PsvitaDevice.connectedFtp().upload(vname, bais, lastFileSize, 0L, object : FTPDataTransferListener {
 							override fun started() {
 								print("started...")
 							}
@@ -512,10 +527,12 @@ object PsvitaDevice {
 							}
 						})
 
+						bais.close()
+						lastFileSize += data.size.toLong()
 						println("")
 					}
-					status.currentSize = startSize + inArchive.getStringProperty(index, PropID.SIZE).toLong()
-					status.currentFile++
+					status.currentSize = startSize + data.size
+					status.currentFile += incrementFileStatus
 					updateStatus(status)
 
 
