@@ -251,17 +251,30 @@ private class MyExtractCallback(private val inArchive: IInArchive, val output: W
 
 	@Throws(SevenZipException::class)
 	override fun prepareOperation(extractAskMode: ExtractAskMode) {
+		//enum:	ExtractAskMode.EXTRACT, ExtractAskMode.SKIP,
+		// 		ExtractAskMode.TEST, ExtractAskMode.UNKNOWN_ASK_MODE
+		//normally only EXTRACT
+		//println("prepareOperation $extractAskMode")
 	}
 
 	@Throws(SevenZipException::class)
 	override fun setOperationResult(extractOperationResult: ExtractOperationResult) {
+		//enum: ExtractOperationResult.OK, ExtractOperationResult.UNSUPPORTEDMETHOD
+		//		ExtractOperationResult.CRCERROR, ExtractOperationResult.DATAERROR
+		//		ExtractOperationResult.UNKNOWN_OPERATION_RESULT
+		//should always be OK, gets called after every file extraction
+		//println("extractOperationResult $extractOperationResult")
 	}
 
 	@Throws(SevenZipException::class)
 	override fun setCompleted(completeValue: Long) {
+		//current size of extracted file, should end up as setTotal
+		//println("setCompleted $completeValue")
 	}
 
 	@Throws(SevenZipException::class)
 	override fun setTotal(total: Long) {
+		//total size of the current file
+		//println("setTotal $total")
 	}
 }

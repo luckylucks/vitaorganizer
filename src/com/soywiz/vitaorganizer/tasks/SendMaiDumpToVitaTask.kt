@@ -1,6 +1,7 @@
 package com.soywiz.vitaorganizer.tasks
 
 import com.soywiz.vitaorganizer.*
+import javax.swing.SwingUtilities
 
 class SendMaiDumpToVitaTask(vitaOrganizer: VitaOrganizer, val entry: CachedGameEntry) : VitaTask(vitaOrganizer) {
 	fun performBase() {
@@ -8,7 +9,7 @@ class SendMaiDumpToVitaTask(vitaOrganizer: VitaOrganizer, val entry: CachedGameE
 		status(Texts.format("STEP_SENDING_GAME", "id" to entry.id))
 		//val zip = ZipFile(entry.vpkFile)
 		try {
-			PsvitaDevice.uploadGameMaiDump(entry.id, entry.vpkLocalFile!!, { status ->
+			PsvitaDevice.uploadGameMaiDump(entry.id, entry.vpkLocalFile!!, this, { status ->
 				//println("$status")
 				status(Texts.format("STEP_SENDING_GAME_UPLOADING", "id" to entry.id, "fileRange" to status.fileRange, "sizeRange" to status.sizeRange, "speed" to status.speedString))
 			})
@@ -23,4 +24,9 @@ class SendMaiDumpToVitaTask(vitaOrganizer: VitaOrganizer, val entry: CachedGameE
 		performBase()
 		status(Texts.format("GAME_SENT_SUCCESSFULLY", "id" to entry.id))
 	}
+
+	fun setSuccess() {
+		status(Texts.format("GAME_SENT_SUCCESSFULLY", "id" to entry.id))
+	}
+
 }
